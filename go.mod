@@ -1,4 +1,4 @@
-module github.com/miko/ghatt
+module github.com/miko/ghatt/cmd/ghatt
 
 go 1.14
 
