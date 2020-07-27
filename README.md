@@ -3,7 +3,8 @@ Graphql and HTTP API Testing Tool
 
 Installation:
 ```
-go get -v -u github.com/miko/ghatt
+GO111MODULE=on go get github.com/cucumber/godog/cmd/godog@v0.10.0
+GO111MODULE=on go get github.com/miko/ghatt/cmd/ghatt
 ```
 
 Usage:
