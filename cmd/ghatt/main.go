@@ -31,7 +31,7 @@ var (
 	}
 	cookieJar     *cookiejar.Jar
 	defaultMemory map[string]string
-	seeded        string = "HOME,OWNER,MAIL"
+	seeded        string = "HTTP_ENDPOINT,GRAPHQL_ENDPOINT,RESET_ENDPOINT"
 )
 
 type apiFeature struct {
@@ -45,7 +45,23 @@ type apiFeature struct {
 	headers     map[string]string
 }
 
-func (a *apiFeature) resetResponse(*godog.Scenario) {
+func (a *apiFeature) resetDatabase(*godog.Scenario) {
+	url := os.Getenv("RESET_ENDPOINT")
+	if url != "" {
+		log.Trace().Str("url", url).Msg("Reset DB")
+		err := a.iSendrequestTo("GET", url)
+		if err != nil {
+			fmt.Errorf("GOT ERROR: %s\n", err)
+		}
+		if a.lastCode != 200 {
+			fmt.Errorf("AFTER DB RESET: code=%d status=%s body=%s\n", a.lastCode, a.lastStatus, a.lastBody)
+		}
+	}
+}
+
+func (a *apiFeature) resetResponse(sc *godog.Scenario) {
+	log.Trace().Msg("Reset reponse")
+	a.resetDatabase(sc)
 	a.lastBody = []byte("")
 	a.lastCode = 0
 	a.lastStatus = ""
@@ -68,7 +84,7 @@ func (a *apiFeature) getParsed(source string) string {
 	if err := tmpl.Execute(&tpl, a.memory); err != nil {
 		return ""
 	}
-
+	log.Trace().Str("in", source).Str("out", tpl.String()).Msg("getParsed")
 	return tpl.String()
 }
 
@@ -80,16 +96,17 @@ func (a *apiFeature) iSendrequestToWithData(method, path string, body *godog.Doc
 }
 func (a *apiFeature) sendrequestTo(method, path string, body string) (err error) {
 	var url string
+	path = a.getParsed(path)
 	if path[0:4] == "http" {
 		url = path
 	} else {
-	if _, ok := a.memory["HTTP_ENDPOINT"]; ok == false {
-		return fmt.Errorf("No http endpoint defined. Please set HTTP_ENDPOINT env variable/memory.")
-	}
-	endpoint := a.memory["HTTP_ENDPOINT"].(string)
-	if endpoint == "" {
-		return fmt.Errorf("No http endpoint defined. Please set HTTP_ENDPOINT env variable/memory.")
-	}
+		if _, ok := a.memory["HTTP_ENDPOINT"]; ok == false {
+			return fmt.Errorf("No http endpoint defined. Please set HTTP_ENDPOINT env variable/memory.")
+		}
+		endpoint := a.memory["HTTP_ENDPOINT"].(string)
+		if endpoint == "" {
+			return fmt.Errorf("No http endpoint defined. Please set HTTP_ENDPOINT env variable/memory.")
+		}
 		url = endpoint + path
 	}
 
@@ -102,7 +119,6 @@ func (a *apiFeature) sendrequestTo(method, path string, body string) (err error)
 			err = t
 		}
 	}()
-	path = a.getParsed(path)
 	body = a.getParsed(body)
 	log.Trace().Str("method", method).Str("url", url).Msg(body)
 	req, err2 := http.NewRequest(method, url, strings.NewReader(body))
@@ -292,6 +308,7 @@ func (a *apiFeature) iRememberJsonpathAs(path, key string) error {
 		return err
 	}
 	a.memory[key] = res
+	log.Trace().Str("key", key).Str("val", res.(string)).Msg("Remembered")
 	return nil
 }
 
@@ -695,7 +712,7 @@ func init() {
 	case "info":
 		zerolog.SetGlobalLevel(zerolog.InfoLevel)
 		break
-	case "warn","":
+	case "warn", "":
 		zerolog.SetGlobalLevel(zerolog.WarnLevel)
 		break
 	case "error":
@@ -726,7 +743,7 @@ func init() {
 
 	FORMAT := os.Getenv("FORMAT")
 	switch FORMAT {
-	case "pretty","":
+	case "pretty", "":
 		opt.Format = "pretty"
 		break
 	case "progress":
@@ -766,6 +783,7 @@ func InitializeScenario(s *godog.ScenarioContext) {
 	s.Step(`^the response jq "([^"]*)" should match subset of json:$`, api.theResponseJqShouldMatchSubsetOfJson)
 
 	s.Step(`^I remember response jsonpath "([^"]*)" as "([^"]*)"$`, api.iRememberJsonpathAs)
+	s.Step(`^I remember jsonpath "([^"]*)" as "([^"]*)"$`, api.iRememberJsonpathAs) //@deprecated  backward compatibility
 	s.Step(`^I remember response jq "([^"]*)" as "([^"]*)"$`, api.iRememberJqAs)
 	s.Step(`^I remember "([^"]*)" as "([^"]*)"$`, api.iRememberAs)
 	s.Step(`^I remember "([^"]*)" as:$`, api.iRememberAsBody)
