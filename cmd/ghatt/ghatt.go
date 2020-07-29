@@ -31,7 +31,7 @@ var (
 	}
 	cookieJar     *cookiejar.Jar
 	defaultMemory map[string]string
-	seeded        string = "HTTP_ENDPOINT,GRAPHQL_ENDPOINT,RESET_ENDPOINT"
+	seeded        string = "HTTP_ENDPOINT,GRAPHQL_ENDPOINT,RESET_ENDPOINT,RESET_METHOD,RESET_BODY"
 )
 
 type apiFeature struct {
@@ -45,32 +45,50 @@ type apiFeature struct {
 	headers     map[string]string
 }
 
-func (a *apiFeature) resetDatabase(*godog.Scenario) {
-	url := os.Getenv("RESET_ENDPOINT")
-	if url != "" {
+func (a *apiFeature) resetDatabase(*godog.Scenario) bool {
+	if endpoint, ok := a.memory["RESET_ENDPOINT"]; ok && endpoint != "" {
+		url := endpoint.(string)
 		log.Trace().Str("url", url).Msg("Reset DB")
-		err := a.iSendrequestTo("GET", url)
+		method := "GET"
+		if m, ok := a.memory["RESET_METHOD"]; ok {
+			method = m.(string)
+		}
+		var err error
+
+		if body, ok := a.memory["RESET_BODY"]; ok {
+			err = a.sendrequestTo(method, url, body.(string))
+		} else {
+			err = a.sendrequestTo(method, url, "")
+		}
 		if err != nil {
 			fmt.Errorf("GOT ERROR: %s\n", err)
 		}
 		if a.lastCode != 200 {
 			fmt.Errorf("AFTER DB RESET: code=%d status=%s body=%s\n", a.lastCode, a.lastStatus, a.lastBody)
 		}
+		return true
+	} else {
+		log.Trace().Str("endpoint", endpoint.(string)).Bool("ok", ok).Msg("Skipping reset - to RESET_ENDPOINT defined")
+		return false
 	}
 }
 
 func (a *apiFeature) resetResponse(sc *godog.Scenario) {
 	log.Trace().Msg("Reset reponse")
-	a.resetDatabase(sc)
-	a.lastBody = []byte("")
-	a.lastCode = 0
-	a.lastStatus = ""
-	a.lastHeaders = map[string]string{}
-
 	a.memory = map[string]interface{}{}
 	for k, v := range defaultMemory {
 		a.memory[k] = v
 	}
+	if a.resetDatabase(sc) {
+		a.memory = map[string]interface{}{}
+		for k, v := range defaultMemory {
+			a.memory[k] = v
+		}
+	}
+	a.lastBody = []byte("")
+	a.lastCode = 0
+	a.lastStatus = ""
+	a.lastHeaders = map[string]string{}
 	a.variables = map[string]interface{}{}
 	a.headers = map[string]string{}
 }
