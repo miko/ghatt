@@ -46,29 +46,34 @@ type apiFeature struct {
 }
 
 func (a *apiFeature) resetDatabase(*godog.Scenario) bool {
-	if endpoint, ok := a.memory["RESET_ENDPOINT"]; ok && endpoint != "" {
-		url := endpoint.(string)
-		log.Trace().Str("url", url).Msg("Reset DB")
-		method := "GET"
-		if m, ok := a.memory["RESET_METHOD"]; ok {
-			method = m.(string)
-		}
-		var err error
+	if endpoint, ok := a.memory["RESET_ENDPOINT"]; ok {
+		if endpoint != "" {
+			url := endpoint.(string)
+			log.Trace().Str("url", url).Msg("Reset DB")
+			method := "GET"
+			if m, ok := a.memory["RESET_METHOD"]; ok {
+				method = m.(string)
+			}
+			var err error
 
-		if body, ok := a.memory["RESET_BODY"]; ok {
-			err = a.sendrequestTo(method, url, body.(string))
+			if body, ok := a.memory["RESET_BODY"]; ok {
+				err = a.sendrequestTo(method, url, body.(string))
+			} else {
+				err = a.sendrequestTo(method, url, "")
+			}
+			if err != nil {
+				fmt.Errorf("GOT ERROR: %s\n", err)
+			}
+			if a.lastCode != 200 {
+				fmt.Errorf("AFTER DB RESET: code=%d status=%s body=%s\n", a.lastCode, a.lastStatus, a.lastBody)
+			}
+			return true
 		} else {
-			err = a.sendrequestTo(method, url, "")
+			log.Trace().Msg("Skipping reset - empty RESET_ENDPOINT defined")
+			return false
 		}
-		if err != nil {
-			fmt.Errorf("GOT ERROR: %s\n", err)
-		}
-		if a.lastCode != 200 {
-			fmt.Errorf("AFTER DB RESET: code=%d status=%s body=%s\n", a.lastCode, a.lastStatus, a.lastBody)
-		}
-		return true
 	} else {
-		log.Trace().Str("endpoint", endpoint.(string)).Bool("ok", ok).Msg("Skipping reset - to RESET_ENDPOINT defined")
+		log.Trace().Msg("Skipping reset - no RESET_ENDPOINT defined")
 		return false
 	}
 }
