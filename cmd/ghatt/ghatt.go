@@ -630,7 +630,9 @@ func (a *apiFeature) iLoadVariablesFromDirectory(dirname string) error {
 		if err != nil {
 			return err
 		}
-		a.memory[file.Name()] = string(content)
+		key := strings.TrimSuffix(file.Name(), ".graphql")
+		log.Trace().Str("key", key).Str("value", string(content)).Msg("Setting content to memory")
+		a.memory[key] = string(content)
 	}
 	return nil
 }
@@ -662,25 +664,25 @@ func (a *apiFeature) iSetHTTPHeaderAs(key, value string) error {
 }
 func (a *apiFeature) iDumpMemory() error {
 	for k, v := range a.memory {
-		log.Info().Str("key", k).Msgf("%#v", v)
+		log.Info().Str("key", k).Str("value", fmt.Sprintf("%#v", v)).Msg("Dumped memory value")
 	}
 	return nil
 }
 func (a *apiFeature) iDumpVariables() error {
 	for k, v := range a.variables {
-		log.Info().Str("key", k).Msgf("%#v", v)
+		log.Info().Str("key", k).Str("value", fmt.Sprintf("%#v", v)).Msg("Dumped variable")
 	}
 	return nil
 }
 func (a *apiFeature) iDumpHeaders() error {
 	for k, v := range a.headers {
-		log.Info().Str("key", k).Msgf("%#v", v)
+		log.Info().Str("key", k).Str("value", fmt.Sprintf("%#v", v)).Msg("Dumped header")
 	}
 	return nil
 }
 func (a *apiFeature) iDumpResponseHeaders() error {
 	for k, v := range a.lastHeaders {
-		log.Info().Str("key", k).Msgf("%#v", v)
+		log.Info().Str("key", k).Str("value", fmt.Sprintf("%#v", v)).Msg("Dumped response header")
 	}
 	return nil
 }
