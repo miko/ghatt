@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"io/ioutil"
@@ -656,7 +657,23 @@ func (a *apiFeature) iExecuteQuery(key string) error {
 		return err
 	}
 	a.headers["Content-Type"] = "application/json"
-	return a.sendrequestTo("POST", endpoint, string(content))
+	err = a.sendrequestTo("POST", endpoint, string(content))
+	if err != nil {
+		return err
+	}
+	var resp struct {
+		Errors []struct {
+			Message string `json:"message,omitempty"`
+		} `json:"errors,omitempty"`
+	}
+	err = json.Unmarshal(a.lastBody, &resp)
+	if err != nil {
+		return err
+	}
+	if len(resp.Errors) > 0 {
+		return errors.New(resp.Errors[0].Message)
+	}
+	return err
 }
 func (a *apiFeature) iSetHTTPHeaderAs(key, value string) error {
 	a.headers[key] = value
