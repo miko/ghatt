@@ -13,6 +13,7 @@ import (
 	"reflect"
 	"strings"
 	"text/template"
+	"time"
 
 	"github.com/PaesslerAG/jsonpath"
 	"github.com/cucumber/godog"
@@ -587,15 +588,15 @@ func (a *apiFeature) iExecuteQueryToWithVariables(path string, body *godog.DocSt
 }
 */
 func (a *apiFeature) iRememberAs(key, value string) error {
-	a.memory[key] = value
+	a.memory[key] = a.getParsed(value)
 	return nil
 }
 func (a *apiFeature) iRememberAsBody(key string, value *godog.DocString) error {
-	a.memory[key] = value.GetContent()
+	a.memory[key] = a.getParsed(value.GetContent())
 	return nil
 }
 func (a *apiFeature) iSetVariableAs(key, value string) error {
-	a.variables[key] = value
+	a.variables[key] = a.getParsed(value)
 	return nil
 }
 func (a *apiFeature) iSetVariableAsNumber(key string, value int) error {
@@ -675,8 +676,14 @@ func (a *apiFeature) iExecuteQuery(key string) error {
 	}
 	return err
 }
+
+func (a *apiFeature) iWaitSeconds(value int) (err error) {
+	time.Sleep(time.Duration(value * 1e9))
+	return nil
+}
+
 func (a *apiFeature) iSetHTTPHeaderAs(key, value string) error {
-	a.headers[key] = value
+	a.headers[key] = a.getParsed(value)
 	return nil
 }
 func (a *apiFeature) iDumpMemory() error {
@@ -838,6 +845,7 @@ func InitializeScenario(s *godog.ScenarioContext) {
 	s.Step(`^I set HTTP header "([^"]*)" as "([^"]*)"$`, api.iSetHTTPHeaderAs)
 
 	s.Step(`^I execute query "([^"]*)"$`, api.iExecuteQuery)
+	s.Step(`^I wait "([^"]*)" seconds$`, api.iWaitSeconds)
 
 	s.Step(`^I dump memory$`, api.iDumpMemory)
 	s.Step(`^I dump variables$`, api.iDumpVariables)
