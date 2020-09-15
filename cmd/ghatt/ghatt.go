@@ -286,6 +286,25 @@ func (a *apiFeature) theResponseJsonpathShouldMatchNumber(path, value string) (e
 	return nil
 }
 
+func (a *apiFeature) theResponseJsonpathShouldMatchFloat(path, value string) (err error) {
+	var v interface{}
+	path = a.getParsed(path)
+	value = a.getParsed(value)
+	err = json.Unmarshal(a.lastBody, &v)
+	if err != nil {
+		return err
+	}
+	res, err := jsonpath.Get(path, v)
+	if err != nil {
+		return err
+	}
+	res = fmt.Sprintf("%f", res.(float64))
+	if res != value {
+		return fmt.Errorf("No match for value, expected=[%s] got=[%s] for path=[%s]", value, res, path)
+	}
+	return nil
+}
+
 func (a *apiFeature) theResponseJsonpathShouldMatchSubsetOfJson(path string, body *godog.DocString) error {
 	var v interface{}
 	path = a.getParsed(path)
@@ -560,10 +579,52 @@ func (a *apiFeature) theResponseJqShouldMatchNumber(path string, value int) (err
 		if err != nil {
 			return err
 		}
-		actual = v.(int)
+		switch v.(type) {
+		case int:
+			actual = v.(int)
+			break
+		case float64:
+			actual = int(v.(float64))
+			break
+		default:
+			return errors.New("Cannot parse value as number")
+		}
 	}
 	if actual != value {
 		return fmt.Errorf("No match for value, expected=[%d] got=[%d] for path=[%s]", value, actual, path)
+	}
+	return nil
+}
+
+func (a *apiFeature) theResponseJqShouldMatchFloat(path string, value float64) (err error) {
+	var v interface{}
+	err = json.Unmarshal(a.lastBody, &v)
+	if err != nil {
+		return err
+	}
+	query, err := gojq.Parse(path)
+	if err != nil {
+		return err
+	}
+	code, err := gojq.Compile(query)
+	if err != nil {
+		return err
+	}
+	log.Trace().Str("q", query.String()).Msgf("float: %#v", code)
+	var actual float64
+	iter := code.Run(v)
+	for {
+		v, ok := iter.Next()
+		if !ok {
+			break
+		}
+		if err != nil {
+			return err
+		}
+		actual = v.(float64)
+	}
+	if actual != value {
+		return fmt.Errorf("No match for value, expected=[%f] got=[%f] for path=[%s]", value, actual, path)
 	}
 	return nil
 }
@@ -821,6 +882,7 @@ func InitializeScenario(s *godog.ScenarioContext) {
 
 	s.Step(`^the response jq "([^"]*)" should match "([^"]*)"$`, api.theResponseJqShouldMatch)
 	s.Step(`^the response jq "([^"]*)" should match number "([^"]*)"$`, api.theResponseJqShouldMatchNumber)
+	s.Step(`^the response jq "([^"]*)" should match float "([^"]*)"$`, api.theResponseJqShouldMatchFloat)
 	s.Step(`^the response jq "([^"]*)" should match json:$`, api.theResponseJqShouldMatchJson)
 	s.Step(`^the response jq "([^"]*)" should match subset of json:$`, api.theResponseJqShouldMatchSubsetOfJson)
 
