@@ -660,6 +660,10 @@ func (a *apiFeature) iSetVariableAs(key, value string) error {
 	a.variables[key] = a.getParsed(value)
 	return nil
 }
+func (a *apiFeature) iSetVariableAsStringList(key, value string) error {
+	a.variables[key] = strings.Split(value, ",")
+	return nil
+}
 func (a *apiFeature) iSetVariableAsNumber(key string, value int) error {
 	a.variables[key] = value
 	return nil
@@ -900,6 +904,7 @@ func InitializeScenario(s *godog.ScenarioContext) {
 	s.Step(`^I remember "([^"]*)" as:$`, api.iRememberAsBody)
 
 	s.Step(`^I set variable "([^"]*)" as "([^"]*)"$`, api.iSetVariableAs)
+	s.Step(`^I set variable "([^"]*)" as string list "([^"]*)"$`, api.iSetVariableAsStringList)
 	s.Step(`^I set variable "([^"]*)" as number "([^"]*)"$`, api.iSetVariableAsNumber)
 	s.Step(`^I set variable "([^"]*)" as float "([^"]*)"$`, api.iSetVariableAsFloat)
 	s.Step(`^I set variable "([^"]*)" as boolean "([^"]*)"$`, api.iSetVariableAsBool)
