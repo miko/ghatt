@@ -549,6 +549,9 @@ func (a *apiFeature) theResponseJqShouldMatch(path, value string) (err error) {
 		if err != nil {
 			return err
 		}
+		if v == nil {
+			return fmt.Errorf("No match for value, expected=[%s] got=[%s] for path=[%s]", value, actual, path)
+		}
 		actual = v.(string)
 	}
 	if actual != value {
