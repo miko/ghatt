@@ -379,7 +379,7 @@ func (a *apiFeature) iRememberJqAs(path, key string) error {
 		if !ok {
 			break
 		}
-		if err != nil {
+		if v == nil {
 			return err
 		}
 		actual = v.(string)
