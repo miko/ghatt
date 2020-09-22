@@ -11,6 +11,7 @@ import (
 	"net/http/cookiejar"
 	"os"
 	"reflect"
+	"strconv"
 	"strings"
 	"text/template"
 	"time"
@@ -672,8 +673,9 @@ func (a *apiFeature) iSetVariableAsFloat(key string, value float64) error {
 	a.variables[key] = value
 	return nil
 }
-func (a *apiFeature) iSetVariableAsBool(key string, value bool) error {
-	a.variables[key] = value
+func (a *apiFeature) iSetVariableAsBool(key string, value string) error {
+	v, _ := strconv.ParseBool(value)
+	a.variables[key] = v
 	return nil
 }
 func (a *apiFeature) iLoadVariablesFromDirectory(dirname string) error {
