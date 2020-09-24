@@ -35,6 +35,7 @@ var (
 	cookieJar     *cookiejar.Jar
 	defaultMemory map[string]string
 	seeded        string = "HTTP_ENDPOINT,GRAPHQL_ENDPOINT,RESET_ENDPOINT,RESET_METHOD,RESET_BODY"
+	funcMap       template.FuncMap
 )
 
 type apiFeature struct {
@@ -102,7 +103,7 @@ func (a *apiFeature) resetResponse(sc *godog.Scenario) {
 }
 
 func (a *apiFeature) getParsed(source string) string {
-	tmpl, err := template.New("tpl").Parse(source)
+	tmpl, err := template.New("tpl").Funcs(funcMap).Parse(source)
 	if err != nil {
 		return ""
 	}
@@ -933,8 +934,22 @@ func InitializeScenario(s *godog.ScenarioContext) {
 
 }
 
+func After(s string) string {
+	d, err := time.ParseDuration(s)
+	if err != nil {
+		log.Error().Err(err).Str("dur", s).Msg("Cannot parse time duration")
+		panic(err)
+	}
+	return time.Now().UTC().Add(d).Format(time.RFC3339)
+}
+
 func main() {
 	flag.Parse()
+	funcMap = template.FuncMap{
+		"now":   time.Now,
+		"after": After,
+	}
+
 	seedDefaultMemory()
 	opt.Paths = flag.Args()
 	status := godog.TestSuite{
