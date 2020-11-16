@@ -718,6 +718,9 @@ func (a *apiFeature) iExecuteQuery(key string) error {
 	if endpoint == "" {
 		return fmt.Errorf("No graphql endpoint defined. Please set GRAPHQL_ENDPOINT env variable/memory.")
 	}
+	if _, ok := a.memory[key]; ok == false {
+		return fmt.Errorf("No graphql query %s defined. Please set memory with a value.", key)
+	}
 	value := a.memory[key].(string)
 	log.Trace().Str("endpoint", endpoint).Str("name", key).Str("body", value).Msg("Executing query")
 	c := struct {
