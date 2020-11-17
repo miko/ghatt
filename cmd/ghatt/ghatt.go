@@ -174,6 +174,7 @@ func (a *apiFeature) sendrequestTo(method, path string, body string) (err error)
 	a.lastCode = resp.StatusCode
 	a.lastStatus = resp.Status
 	a.lastHeaders = map[string]string{}
+	a.lastErrors = []byte("")
 	for k, v := range resp.Header {
 		log.Trace().Str("k", k).Str("v", v[0]).Msg("HDR IN")
 		a.lastHeaders[k] = v[0]
