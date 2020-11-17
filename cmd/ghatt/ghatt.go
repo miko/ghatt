@@ -43,6 +43,7 @@ type apiFeature struct {
 	lastCode    int
 	lastStatus  string
 	lastBody    []byte
+	lastErrors  []byte
 	lastHeaders map[string]string
 	memory      map[string]interface{}
 	variables   map[string]interface{}
@@ -98,6 +99,7 @@ func (a *apiFeature) resetResponse(sc *godog.Scenario) {
 	a.lastCode = 0
 	a.lastStatus = ""
 	a.lastHeaders = map[string]string{}
+	a.lastErrors = []byte("")
 	a.variables = map[string]interface{}{}
 	a.headers = map[string]string{}
 }
@@ -228,6 +230,26 @@ func (a *apiFeature) theResponseShouldMatchJSON(body *godog.DocString) (err erro
 	// the matching may be adapted per different requirements.
 	if !reflect.DeepEqual(expected, actual) {
 		return fmt.Errorf("expected JSON does not match actual, %v vs. %v expected=%s actual=%s", expected, actual, body.Content, a.lastBody)
+	}
+	return nil
+}
+
+func (a *apiFeature) theResponseErrorsShouldMatchJSON(body *godog.DocString) (err error) {
+	var expected, actual interface{}
+
+	body.Content = a.getParsed(body.Content)
+	// re-encode expected response
+	if err = json.Unmarshal([]byte(body.Content), &expected); err != nil {
+		return
+	}
+
+	if err = json.Unmarshal(a.lastErrors, &actual); err != nil {
+		return
+	}
+
+	// the matching may be adapted per different requirements.
+	if !reflect.DeepEqual(expected, actual) {
+		return fmt.Errorf("expected JSON does not match actual, %v vs. %v expected=%s actual=%s", expected, actual, body.Content, a.lastErrors)
 	}
 	return nil
 }
@@ -447,6 +469,61 @@ func (a *apiFeature) theResponseJqShouldMatchJson(path string, body *godog.DocSt
 			return fmt.Errorf("%s: %s", res.Message, res.Error)
 		}
 	} else {
+		return err
+	}
+	if iter == nil {
+		return fmt.Errorf("Problem with response, expected:\n%s", body.Content)
+	}
+	for {
+		v, ok := iter.Next()
+		if !ok {
+			break
+		}
+		actual = v
+	}
+	// the matching may be adapted per different requirements.
+	if !reflect.DeepEqual(expected, actual) {
+		ae, _ := json.Marshal(actual)
+		return fmt.Errorf("expected JSON does not match actual, expected:\n%s\nactual:\n%s", body.Content, string(ae))
+	}
+
+	return nil
+}
+
+func (a *apiFeature) theResponseErrorsJqShouldMatchJson(path string, body *godog.DocString) (err error) {
+	var v interface{}
+	var expected, actual interface{}
+
+	// re-encode expected response
+	if err := json.Unmarshal([]byte(body.Content), &expected); err != nil {
+		log.Error().Err(err).Msg("EEEERRRR22222")
+		return err
+	}
+	if string(a.lastErrors) == "" {
+		a.lastErrors = []byte(`[]`)
+	}
+	err = json.Unmarshal(a.lastErrors, &v)
+	if err != nil {
+		log.Error().Err(err).Msg("EEEERRRR22223")
+		return err
+	}
+	query, err := gojq.Parse(path)
+	if err != nil {
+		return err
+	}
+	code, err := gojq.Compile(query)
+	if err != nil {
+		return err
+	}
+
+	iter := code.Run(v)
+	var res []struct {
+		Error   string `json:"error,omitempty"`
+		Message string `json:"message,omitempty"`
+		Status  bool   `json:"status,omitempty"`
+	}
+	err = json.Unmarshal([]byte(a.lastErrors), &res)
+	if err != nil {
 		return err
 	}
 	if iter == nil {
@@ -709,6 +786,46 @@ func (a *apiFeature) iLoadVariablesFromDirectory(dirname string) error {
 	}
 	return nil
 }
+func (a *apiFeature) theResponseErrorsJqShouldMatchNumber(path string, value int) (err error) {
+	var v interface{}
+	if string(a.lastErrors) == "" {
+		a.lastErrors = []byte(`[]`)
+	}
+	err = json.Unmarshal(a.lastErrors, &v)
+	if err != nil {
+		return err
+	}
+	query, err := gojq.Parse(path)
+	if err != nil {
+		return err
+	}
+	code, err := gojq.Compile(query)
+	if err != nil {
+		return err
+	}
+	var actual int
+	iter := code.Run(v)
+	for {
+		v, ok := iter.Next()
+		if !ok {
+			break
+		}
+		switch v.(type) {
+		case int:
+			actual = v.(int)
+			break
+		case float64:
+			actual = int(v.(float64))
+			break
+		default:
+			return errors.New("Cannot parse value as number")
+		}
+	}
+	if actual != value {
+		return fmt.Errorf("No match for value, expected=[%d] got=[%d] for path=[%s]", value, actual, path)
+	}
+	return nil
+}
 
 func (a *apiFeature) iExecuteQuery(key string) error {
 	if _, ok := a.memory["GRAPHQL_ENDPOINT"]; ok == false {
@@ -905,6 +1022,9 @@ func InitializeScenario(s *godog.ScenarioContext) {
 	s.Step(`^the response jq "([^"]*)" should match float "([^"]*)"$`, api.theResponseJqShouldMatchFloat)
 	s.Step(`^the response jq "([^"]*)" should match json:$`, api.theResponseJqShouldMatchJson)
 	s.Step(`^the response jq "([^"]*)" should match subset of json:$`, api.theResponseJqShouldMatchSubsetOfJson)
+
+	s.Step(`^the response errors jq "([^"]*)" should match json:$`, api.theResponseErrorsJqShouldMatchJson)
+	s.Step(`^the response errors jq "([^"]*)" should match number "([^"]*)"$`, api.theResponseErrorsJqShouldMatchNumber)
 
 	s.Step(`^I remember response jsonpath "([^"]*)" as "([^"]*)"$`, api.iRememberJsonpathAs)
 	s.Step(`^I remember jsonpath "([^"]*)" as "([^"]*)"$`, api.iRememberJsonpathAs) //@deprecated  backward compatibility
