@@ -786,6 +786,7 @@ func (a *apiFeature) iLoadVariablesFromDirectory(dirname string) error {
 	}
 	return nil
 }
+
 func (a *apiFeature) theResponseErrorsJqShouldMatchNumber(path string, value int) (err error) {
 	var v interface{}
 	if string(a.lastErrors) == "" {
@@ -863,7 +864,12 @@ func (a *apiFeature) iExecuteQuery(key string) error {
 		return err
 	}
 	if len(resp.Errors) > 0 {
-		return errors.New(resp.Errors[0].Message)
+		var errs []string
+		for _, v := range resp.Errors {
+			errs = append(errs, v.Message)
+		}
+		a.lastErrors, _ = json.Marshal(resp.Errors)
+		//return errors.New(resp.Errors[0].Message)
 	}
 	return err
 }
@@ -1023,6 +1029,7 @@ func InitializeScenario(s *godog.ScenarioContext) {
 	s.Step(`^the response jq "([^"]*)" should match json:$`, api.theResponseJqShouldMatchJson)
 	s.Step(`^the response jq "([^"]*)" should match subset of json:$`, api.theResponseJqShouldMatchSubsetOfJson)
 
+	s.Step(`^the response errors should match json:$`, api.theResponseErrorsShouldMatchJSON)
 	s.Step(`^the response errors jq "([^"]*)" should match json:$`, api.theResponseErrorsJqShouldMatchJson)
 	s.Step(`^the response errors jq "([^"]*)" should match number "([^"]*)"$`, api.theResponseErrorsJqShouldMatchNumber)
 
