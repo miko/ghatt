@@ -36,6 +36,8 @@ var (
 	defaultMemory map[string]string
 	seeded        string = "HTTP_ENDPOINT,GRAPHQL_ENDPOINT,RESET_ENDPOINT,RESET_METHOD,RESET_BODY"
 	funcMap       template.FuncMap
+  COMMIT string = 'commit'
+  TAG string = 'tag'
 )
 
 type apiFeature struct {
@@ -945,7 +947,7 @@ func init() {
 	godog.BindFlags("", flag.CommandLine, &opt)
 	zerolog.SetGlobalLevel(zerolog.WarnLevel)
 	if err := godotenv.Load(); err != nil {
-		log.Warn().Msg("File .env not found, reading configuration from ENV")
+		log.Warn().Str("TAG", TAG).Str("COMMIT",COMMIT).Msg("File .env not found, reading configuration from ENV")
 	}
 
 	LOGLEVEL := os.Getenv("LOGLEVEL")
@@ -1000,7 +1002,7 @@ func init() {
 		log.Warn().Str("format", FORMAT).Msg("Unsupported format")
 	}
 
-	log.Debug().Str("loglevel", LOGLEVEL).Str("logformat", LOGFORMAT).Msg("Starting")
+	log.Debug().Str("TAG",TAG).Str("COMMIT",COMMIT).Str("loglevel", LOGLEVEL).Str("logformat", LOGFORMAT).Msg("Starting")
 	cookieJar, _ = cookiejar.New(nil)
 }
 
