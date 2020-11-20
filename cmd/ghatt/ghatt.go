@@ -7,6 +7,7 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
+	"math/rand"
 	"net/http"
 	"net/http/cookiejar"
 	"os"
@@ -21,9 +22,12 @@ import (
 	"github.com/cucumber/godog/colors"
 	"github.com/itchyny/gojq"
 	"github.com/joho/godotenv"
+	"github.com/kjk/betterguid"
 	"github.com/nsf/jsondiff"
+	"github.com/oklog/ulid/v2"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	"github.com/segmentio/ksuid"
 	"github.com/tidwall/pretty"
 )
 
@@ -48,6 +52,16 @@ type apiFeature struct {
 	memory      map[string]interface{}
 	variables   map[string]interface{}
 	headers     map[string]string
+}
+
+func ExampleULID() string {
+	t := time.Unix(1000000, 0)
+	entropy := ulid.Monotonic(rand.New(rand.NewSource(t.UnixNano())), 0)
+	return ulid.MustNew(ulid.Timestamp(t), entropy).String()
+}
+
+func ExampleKSUID() string {
+	return ksuid.New().String()
 }
 
 func (a *apiFeature) resetDatabase(*godog.Scenario) bool {
@@ -1077,8 +1091,11 @@ func After(s string) string {
 func main() {
 	flag.Parse()
 	funcMap = template.FuncMap{
-		"now":   time.Now,
-		"after": After,
+		"now":        time.Now,
+		"after":      After,
+		"ulid":       ExampleULID,
+		"ksuid":      ExampleKSUID,
+		"betterguid": betterguid.New,
 	}
 
 	seedDefaultMemory()
