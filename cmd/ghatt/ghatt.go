@@ -281,10 +281,10 @@ func (a *apiFeature) theResponseShouldMatchSubsetOfJSON(body *godog.DocString) (
 		return nil
 		break
 	case jsondiff.NoMatch:
-		return fmt.Errorf("No match for s= %s a=[%s] b=[%s]", s, a.lastBody, body.Content)
+		return fmt.Errorf("No match for [%s] got=[%s] expected=[%s]", s, a.lastBody, body.Content)
 		break
 	default:
-		return fmt.Errorf("Unsupported match type, %d  for s= %s a=[%s] b=[%s]", d, s, a.lastBody, body.Content)
+		return fmt.Errorf("Unsupported match type, %d  for [%s] got=[%s] expected=[%s]", d, s, a.lastBody, body.Content)
 	}
 	return nil
 }
@@ -372,10 +372,10 @@ func (a *apiFeature) theResponseJsonpathShouldMatchSubsetOfJson(path string, bod
 		return nil
 		break
 	case jsondiff.NoMatch:
-		return fmt.Errorf("No match for s= %s path=[%s] a=[%s] b=[%s]", s, path, ress, body.Content)
+		return fmt.Errorf("No match for [%s] path=[%s] got=[%s] expected=[%s]", s, path, ress, body.Content)
 		break
 	default:
-		return fmt.Errorf("Unsupported match type, %d  for s= %s path=[%s] a=[%s] b=[%s]", d, s, path, ress, body.Content)
+		return fmt.Errorf("Unsupported match type, %d  for [%s] path=[%s] got=[%s] expected=[%s]", d, s, path, ress, body.Content)
 	}
 	return nil
 }
