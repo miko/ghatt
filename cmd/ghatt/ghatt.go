@@ -900,25 +900,25 @@ func (a *apiFeature) iSetHTTPHeaderAs(key, value string) error {
 }
 func (a *apiFeature) iDumpMemory() error {
 	for k, v := range a.memory {
-		log.Info().Str("key", k).Str("value", fmt.Sprintf("%#v", v)).Msg("Dumped memory value")
+    fmt.Sprintf("[Memory \"%s\": \"%v\"\n", k,v)
 	}
 	return nil
 }
 func (a *apiFeature) iDumpVariables() error {
 	for k, v := range a.variables {
-		log.Info().Str("key", k).Str("value", fmt.Sprintf("%#v", v)).Msg("Dumped variable")
+    fmt.Sprintf("[Variable \"%s\": \"%v\"\n", k,v)
 	}
 	return nil
 }
 func (a *apiFeature) iDumpHeaders() error {
 	for k, v := range a.headers {
-		log.Info().Str("key", k).Str("value", fmt.Sprintf("%#v", v)).Msg("Dumped header")
+    fmt.Sprintf("[Header \"%s\": \"%v\"\n", k,v)
 	}
 	return nil
 }
 func (a *apiFeature) iDumpResponseHeaders() error {
 	for k, v := range a.lastHeaders {
-		log.Info().Str("key", k).Str("value", fmt.Sprintf("%#v", v)).Msg("Dumped response header")
+    fmt.Sprintf("[Response header \"%s\": \"%v\"\n", k,v)
 	}
 	return nil
 }
@@ -926,6 +926,23 @@ func (a *apiFeature) iDumpResponseAsJSON() error {
 	fmt.Println(string(pretty.Color(pretty.Pretty(a.lastBody), nil)))
 	return nil
 }
+func (a *apiFeature) iShowMemoryKey(key string) error {
+  fmt.Printf("[Memory \"%s\": \"%v\"]\n", key, a.memory[key])
+	return nil
+}
+func (a *apiFeature) iShowVariableKey(key string) error {
+  fmt.Printf("[Variable \"%s\": \"%v\"]\n", key, a.variables[key])
+	return nil
+}
+func (a *apiFeature) iShowHeaderKey(key string) error {
+  fmt.Printf("[Header \"%s\": \"%v\"]\n", key, a.headers[key])
+	return nil
+}
+func (a *apiFeature) iShowResponseHeaderKey(key string) error {
+  fmt.Printf("[Response header \"%s\": \"%v\"]\n", key, a.lastHeaders[key])
+	return nil
+}
+
 func (a *apiFeature) iResetVariables() error {
 	a.variables = map[string]interface{}{}
 	return nil
@@ -1070,6 +1087,11 @@ func InitializeScenario(s *godog.ScenarioContext) {
 	s.Step(`^I dump headers$`, api.iDumpHeaders)
 	s.Step(`^I dump response headers$`, api.iDumpResponseHeaders)
 	s.Step(`^I dump response as JSON$`, api.iDumpResponseAsJSON)
+
+	s.Step(`^I show memory key "([^"]*)"$`, api.iShowMemoryKey)
+	s.Step(`^I show variable key "([^"]*)"$`, api.iShowVariableKey)
+	s.Step(`^I show header key "([^"]*)"$`, api.iShowHeaderKey)
+	s.Step(`^I show response header key "([^"]*)"$`, api.iShowResponseHeaderKey)
 
 	s.Step(`^I reset headers$`, api.iResetHeaders)
 	s.Step(`^I reset variables$`, api.iResetVariables)
