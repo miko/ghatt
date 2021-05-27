@@ -326,6 +326,25 @@ func (a *apiFeature) theResponseJsonpathShouldMatchNumber(path, value string) (e
 	return nil
 }
 
+func (a *apiFeature) theResponseJsonpathShouldMatchBool(path, value string) (err error) {
+	var v interface{}
+	path = a.getParsed(path)
+	value = a.getParsed(value)
+	err = json.Unmarshal(a.lastBody, &v)
+	if err != nil {
+		return err
+	}
+	res, err := jsonpath.Get(path, v)
+	if err != nil {
+		return err
+	}
+	res = fmt.Sprintf("%t", res.(bool))
+	if res != value {
+		return fmt.Errorf("No match for value, expected=[%s] got=[%s] for path=[%s]", value, res, path)
+	}
+	return nil
+}
+
 func (a *apiFeature) theResponseJsonpathShouldMatchFloat(path, value string) (err error) {
 	var v interface{}
 	path = a.getParsed(path)
@@ -727,6 +746,40 @@ func (a *apiFeature) theResponseJqShouldMatchFloat(path string, value float64) (
 	return nil
 }
 
+func (a *apiFeature) theResponseJqShouldMatchBool(path string, value string) (err error) {
+	var v interface{}
+	err = json.Unmarshal(a.lastBody, &v)
+	if err != nil {
+		return err
+	}
+	query, err := gojq.Parse(path)
+	if err != nil {
+		return err
+	}
+	code, err := gojq.Compile(query)
+	if err != nil {
+		return err
+	}
+	log.Trace().Str("q", query.String()).Msgf("bool: %#v", code)
+	var actual bool
+	iter := code.Run(v)
+	for {
+		v, ok := iter.Next()
+		if !ok {
+			break
+		}
+		if err != nil {
+			return err
+		}
+		actual = v.(bool)
+	}
+	value = a.getParsed(value)
+	if fmt.Sprintf("%t",actual) != value {
+		return fmt.Errorf("No match for value, expected=[%s] got=[%t] for path=[%s]", value, actual, path)
+	}
+	return nil
+}
+
 /*
 func (a *apiFeature) iExecuteQueryToWithVariables(path string, body *godog.DocString) error {
 	var v interface{}
@@ -1057,12 +1110,14 @@ func InitializeScenario(s *godog.ScenarioContext) {
 
 	s.Step(`^the response jsonpath "([^"]*)" should match "([^"]*)"$`, api.theResponseJsonpathShouldMatch)
 	s.Step(`^the response jsonpath "([^"]*)" should match number "([^"]*)"$`, api.theResponseJsonpathShouldMatchNumber)
+	s.Step(`^the response jsonpath "([^"]*)" should match bool "([^"]*)"$`, api.theResponseJsonpathShouldMatchBool)
 	s.Step(`^the response jsonpath "([^"]*)" should match json:$`, api.theResponseJsonpathShouldMatchJson)
 	s.Step(`^the response jsonpath "([^"]*)" should match subset of json:$`, api.theResponseJsonpathShouldMatchSubsetOfJson)
 
 	s.Step(`^the response jq "([^"]*)" should match "([^"]*)"$`, api.theResponseJqShouldMatch)
 	s.Step(`^the response jq "([^"]*)" should match number "([^"]*)"$`, api.theResponseJqShouldMatchNumber)
 	s.Step(`^the response jq "([^"]*)" should match float "([^"]*)"$`, api.theResponseJqShouldMatchFloat)
+	s.Step(`^the response jq "([^"]*)" should match bool "([^"]*)"$`, api.theResponseJqShouldMatchBool)
 	s.Step(`^the response jq "([^"]*)" should match json:$`, api.theResponseJqShouldMatchJson)
 	s.Step(`^the response jq "([^"]*)" should match subset of json:$`, api.theResponseJqShouldMatchSubsetOfJson)
 
