@@ -3,8 +3,7 @@ RUN apk add git
 RUN GO111MODULE=on go get github.com/cucumber/godog/cmd/godog@v0.10.0
 RUN GO111MODULE=on go get github.com/miko/ghatt/cmd/ghatt
 RUN go get github.com/miko/waitforit/v2
-ENTRYPOINT ghatt
+RUN mkdir /ghatt
+ENTRYPOINT /bin/sh
 WORKDIR /ghatt
-COPY examples /ghatt/features
-CMD "/ghatt/features"
 
