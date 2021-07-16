@@ -327,6 +327,7 @@ func (a *apiFeature) theResponseJsonpathShouldMatchNumber(path, value string) (e
 }
 
 func (a *apiFeature) iUnsetHeader(key string) error {
+	log.Trace().Str("key", key).Msg("Header unset")
 	delete(a.headers, key)
 	return nil
 }
@@ -812,6 +813,7 @@ func (a *apiFeature) iRememberAsBody(key string, value *godog.DocString) error {
 	return nil
 }
 func (a *apiFeature) iUnsetMemory(key string) error {
+	log.Trace().Str("key", key).Msg("Memory unset")
 	delete(a.memory, key)
 	return nil
 }
@@ -842,6 +844,7 @@ func (a *apiFeature) iSetVariableAsBool(key string, value string) error {
 	return nil
 }
 func (a *apiFeature) iUnsetVariable(key string) error {
+	log.Trace().Str("key", key).Msg("Variable unset")
 	delete(a.variables, key)
 	return nil
 }
@@ -1170,9 +1173,9 @@ func InitializeScenario(s *godog.ScenarioContext) {
 	s.Step(`^I reset headers$`, api.iResetHeaders)
 	s.Step(`^I reset variables$`, api.iResetVariables)
 	s.Step(`^I reset memory$`, api.iResetMemory)
-	s.Step(`^I unset variable "([^"]*)""$`, api.iUnsetVariable)
-	s.Step(`^I unset header "([^"]*)""$`, api.iUnsetHeader)
-	s.Step(`^I unset memory "([^"]*)""$`, api.iUnsetMemory)
+	s.Step(`^I unset variable "([^"]*)"$`, api.iUnsetVariable)
+	s.Step(`^I unset header "([^"]*)"$`, api.iUnsetHeader)
+	s.Step(`^I unset memory "([^"]*)"$`, api.iUnsetMemory)
 
 	s.Step(`^I load variables from directory "([^"]*)"$`, api.iLoadVariablesFromDirectory)
 
