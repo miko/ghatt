@@ -1,7 +1,7 @@
 FROM golang:alpine
 RUN apk add git
 RUN GO111MODULE=on go get github.com/cucumber/godog/cmd/godog@v0.10.0
-ARG TAG=v1.2.17
+ARG TAG=v1.2.18
 RUN GO111MODULE=on go get github.com/miko/ghatt/cmd/ghatt@${TAG}
 RUN go get github.com/miko/waitforit/v2
 RUN mkdir /ghatt
