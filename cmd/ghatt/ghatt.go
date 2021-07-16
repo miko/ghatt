@@ -326,6 +326,11 @@ func (a *apiFeature) theResponseJsonpathShouldMatchNumber(path, value string) (e
 	return nil
 }
 
+func (a *apiFeature) iUnsetHeader(key string) error {
+	delete(a.headers, key)
+	return nil
+}
+
 func (a *apiFeature) theResponseJsonpathShouldMatchBool(path, value string) (err error) {
 	var v interface{}
 	path = a.getParsed(path)
@@ -774,7 +779,7 @@ func (a *apiFeature) theResponseJqShouldMatchBool(path string, value string) (er
 		actual = v.(bool)
 	}
 	value = a.getParsed(value)
-	if fmt.Sprintf("%t",actual) != value {
+	if fmt.Sprintf("%t", actual) != value {
 		return fmt.Errorf("No match for value, expected=[%s] got=[%t] for path=[%s]", value, actual, path)
 	}
 	return nil
@@ -806,6 +811,10 @@ func (a *apiFeature) iRememberAsBody(key string, value *godog.DocString) error {
 	a.memory[key] = a.getParsed(value.GetContent())
 	return nil
 }
+func (a *apiFeature) iUnsetMemory(key string) error {
+	delete(a.memory, key)
+	return nil
+}
 func (a *apiFeature) iSetVariableAs(key, value string) error {
 	a.variables[key] = a.getParsed(value)
 	return nil
@@ -830,6 +839,10 @@ func (a *apiFeature) iSetVariableAsFloat(key string, value float64) error {
 func (a *apiFeature) iSetVariableAsBool(key string, value string) error {
 	v, _ := strconv.ParseBool(value)
 	a.variables[key] = v
+	return nil
+}
+func (a *apiFeature) iUnsetVariable(key string) error {
+	delete(a.variables, key)
 	return nil
 }
 func (a *apiFeature) iLoadVariablesFromDirectory(dirname string) error {
@@ -958,25 +971,25 @@ func (a *apiFeature) iSetHTTPHeaderAs(key, value string) error {
 }
 func (a *apiFeature) iDumpMemory() error {
 	for k, v := range a.memory {
-    fmt.Sprintf("[Memory \"%s\": \"%v\"\n", k,v)
+		fmt.Sprintf("[Memory \"%s\": \"%v\"\n", k, v)
 	}
 	return nil
 }
 func (a *apiFeature) iDumpVariables() error {
 	for k, v := range a.variables {
-    fmt.Sprintf("[Variable \"%s\": \"%v\"\n", k,v)
+		fmt.Sprintf("[Variable \"%s\": \"%v\"\n", k, v)
 	}
 	return nil
 }
 func (a *apiFeature) iDumpHeaders() error {
 	for k, v := range a.headers {
-    fmt.Sprintf("[Header \"%s\": \"%v\"\n", k,v)
+		fmt.Sprintf("[Header \"%s\": \"%v\"\n", k, v)
 	}
 	return nil
 }
 func (a *apiFeature) iDumpResponseHeaders() error {
 	for k, v := range a.lastHeaders {
-    fmt.Sprintf("[Response header \"%s\": \"%v\"\n", k,v)
+		fmt.Sprintf("[Response header \"%s\": \"%v\"\n", k, v)
 	}
 	return nil
 }
@@ -985,19 +998,19 @@ func (a *apiFeature) iDumpResponseAsJSON() error {
 	return nil
 }
 func (a *apiFeature) iShowMemoryKey(key string) error {
-  fmt.Printf("[Memory \"%s\": \"%v\"]\n", key, a.memory[key])
+	fmt.Printf("[Memory \"%s\": \"%v\"]\n", key, a.memory[key])
 	return nil
 }
 func (a *apiFeature) iShowVariableKey(key string) error {
-  fmt.Printf("[Variable \"%s\": \"%v\"]\n", key, a.variables[key])
+	fmt.Printf("[Variable \"%s\": \"%v\"]\n", key, a.variables[key])
 	return nil
 }
 func (a *apiFeature) iShowHeaderKey(key string) error {
-  fmt.Printf("[Header \"%s\": \"%v\"]\n", key, a.headers[key])
+	fmt.Printf("[Header \"%s\": \"%v\"]\n", key, a.headers[key])
 	return nil
 }
 func (a *apiFeature) iShowResponseHeaderKey(key string) error {
-  fmt.Printf("[Response header \"%s\": \"%v\"]\n", key, a.lastHeaders[key])
+	fmt.Printf("[Response header \"%s\": \"%v\"]\n", key, a.lastHeaders[key])
 	return nil
 }
 
@@ -1132,7 +1145,7 @@ func InitializeScenario(s *godog.ScenarioContext) {
 	s.Step(`^I remember "([^"]*)" as:$`, api.iRememberAsBody)
 
 	s.Step(`^I set variable "([^"]*)" as "([^"]*)"$`, api.iSetVariableAs)
-  s.Step(`^I set variable "([^"]*)" as:$`, api.iSetVariableAsMultiline)
+	s.Step(`^I set variable "([^"]*)" as:$`, api.iSetVariableAsMultiline)
 	s.Step(`^I set variable "([^"]*)" as string list "([^"]*)"$`, api.iSetVariableAsStringList)
 	s.Step(`^I set variable "([^"]*)" as number "([^"]*)"$`, api.iSetVariableAsNumber)
 	s.Step(`^I set variable "([^"]*)" as float "([^"]*)"$`, api.iSetVariableAsFloat)
@@ -1157,6 +1170,9 @@ func InitializeScenario(s *godog.ScenarioContext) {
 	s.Step(`^I reset headers$`, api.iResetHeaders)
 	s.Step(`^I reset variables$`, api.iResetVariables)
 	s.Step(`^I reset memory$`, api.iResetMemory)
+	s.Step(`^I unset variable "([^"]*)""$`, api.iUnsetVariable)
+	s.Step(`^I unset header "([^"]*)""$`, api.iUnsetHeader)
+	s.Step(`^I unset memory "([^"]*)""$`, api.iUnsetMemory)
 
 	s.Step(`^I load variables from directory "([^"]*)"$`, api.iLoadVariablesFromDirectory)
 
