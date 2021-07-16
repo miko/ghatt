@@ -1182,7 +1182,7 @@ func InitializeScenario(s *godog.ScenarioContext) {
 }
 
 func getTimeFormat(s string) string {
-	result := time.RFC3339
+	result := s
 	switch s {
 	case "ansic":
 		result = time.ANSIC
@@ -1214,7 +1214,11 @@ func getTimeFormat(s string) string {
 	case "rfc3339nano":
 		result = time.RFC3339Nano
 		break
+	case "":
+		result = time.RFC3339
+		break
 	}
+	log.Trace().Str("in", s).Str("out", result).Msg("Time format")
 	return result
 }
 
