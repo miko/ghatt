@@ -1,7 +1,7 @@
-TAG=v1.2.16
-docker build -t miko/ghatt .
+TAG=v1.2.17
+docker build --build-arg=TAG=${TAG} -t miko/ghatt .
 docker tag miko/ghatt miko/ghatt:${TAG}
-docker build --no-cache --rm -f Dockerfile.base -t miko/ghatt:base .
+docker build --build-arg=TAG=${TAG} --no-cache --rm -f Dockerfile.base -t miko/ghatt:base .
 docker tag miko/ghatt:base miko/ghatt:${TAG}-base
 
 
