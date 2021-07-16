@@ -1181,13 +1181,50 @@ func InitializeScenario(s *godog.ScenarioContext) {
 
 }
 
-func After(s string) string {
+func getTimeFormat(s string) string {
+	result := time.RFC3339
+	switch s {
+	case "ansic":
+		result = time.ANSIC
+		break
+	case "unixdate":
+		result = time.UnixDate
+		break
+	case "rubydate":
+		result = time.RubyDate
+		break
+	case "rfc882":
+		result = time.RFC822
+		break
+	case "rfc882z":
+		result = time.RFC822Z
+		break
+	case "rfc850":
+		result = time.RFC850
+		break
+	case "rfc1123":
+		result = time.RFC1123
+		break
+	case "rfc1123z":
+		result = time.RFC1123Z
+		break
+	case "rfc3339":
+		result = time.RFC3339
+		break
+	case "rfc3339nano":
+		result = time.RFC3339Nano
+		break
+	}
+	return result
+}
+
+func After(s, f string) string {
 	d, err := time.ParseDuration(s)
 	if err != nil {
 		log.Error().Err(err).Str("dur", s).Msg("Cannot parse time duration")
 		panic(err)
 	}
-	return time.Now().UTC().Add(d).Format(time.RFC3339)
+	return time.Now().UTC().Add(d).Format(getTimeFormat(f))
 }
 
 func main() {
