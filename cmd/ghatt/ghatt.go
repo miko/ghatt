@@ -806,6 +806,7 @@ func (a *apiFeature) iExecuteQueryToWithVariables(path string, body *godog.DocSt
 */
 func (a *apiFeature) iRememberAs(key, value string) error {
 	a.memory[key] = a.getParsed(value)
+	log.Trace().Str("key", key).Str("val", a.memory[key].(string)).Msg("Remembered")
 	return nil
 }
 func (a *apiFeature) iRememberAsBody(key string, value *godog.DocString) error {
@@ -974,25 +975,25 @@ func (a *apiFeature) iSetHTTPHeaderAs(key, value string) error {
 }
 func (a *apiFeature) iDumpMemory() error {
 	for k, v := range a.memory {
-		fmt.Sprintf("[Memory \"%s\": \"%v\"\n", k, v)
+	  log.Info().Str("key", k).Str("val",v.(string)).Msg("Memory dump")
 	}
 	return nil
 }
 func (a *apiFeature) iDumpVariables() error {
 	for k, v := range a.variables {
-		fmt.Sprintf("[Variable \"%s\": \"%v\"\n", k, v)
+	  log.Info().Str("key", k).Str("val",v.(string)).Msg("Variable dump")
 	}
 	return nil
 }
 func (a *apiFeature) iDumpHeaders() error {
 	for k, v := range a.headers {
-		fmt.Sprintf("[Header \"%s\": \"%v\"\n", k, v)
+	  log.Info().Str("key", k).Str("val",v).Msg("Header dump")
 	}
 	return nil
 }
 func (a *apiFeature) iDumpResponseHeaders() error {
 	for k, v := range a.lastHeaders {
-		fmt.Sprintf("[Response header \"%s\": \"%v\"\n", k, v)
+	  log.Info().Str("key", k).Str("val",v).Msg("Response header dump")
 	}
 	return nil
 }
@@ -1002,18 +1003,22 @@ func (a *apiFeature) iDumpResponseAsJSON() error {
 }
 func (a *apiFeature) iShowMemoryKey(key string) error {
 	fmt.Printf("[Memory \"%s\": \"%v\"]\n", key, a.memory[key])
+	log.Info().Str("key", key).Str("val",a.memory[key].(string)).Msg("Memory value")
 	return nil
 }
 func (a *apiFeature) iShowVariableKey(key string) error {
 	fmt.Printf("[Variable \"%s\": \"%v\"]\n", key, a.variables[key])
+	log.Info().Str("key", key).Str("val",a.variables[key].(string)).Msg("Variable value")
 	return nil
 }
 func (a *apiFeature) iShowHeaderKey(key string) error {
 	fmt.Printf("[Header \"%s\": \"%v\"]\n", key, a.headers[key])
+	log.Info().Str("key", key).Str("val",a.headers[key]).Msg("Header value")
 	return nil
 }
 func (a *apiFeature) iShowResponseHeaderKey(key string) error {
 	fmt.Printf("[Response header \"%s\": \"%v\"]\n", key, a.lastHeaders[key])
+	log.Info().Str("key", key).Str("val",a.lastHeaders[key]).Msg("Response header value")
 	return nil
 }
 
@@ -1239,6 +1244,7 @@ func main() {
 		"ulid":       ExampleULID,
 		"ksuid":      ExampleKSUID,
 		"betterguid": betterguid.New,
+		"getenv":     os.Getenv,
 	}
 
 	seedDefaultMemory()
