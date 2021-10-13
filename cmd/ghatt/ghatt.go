@@ -975,25 +975,25 @@ func (a *apiFeature) iSetHTTPHeaderAs(key, value string) error {
 }
 func (a *apiFeature) iDumpMemory() error {
 	for k, v := range a.memory {
-	  log.Info().Str("key", k).Str("val",v.(string)).Msg("Memory dump")
+		log.Info().Str("key", k).Str("val", v.(string)).Msg("Memory dump")
 	}
 	return nil
 }
 func (a *apiFeature) iDumpVariables() error {
 	for k, v := range a.variables {
-	  log.Info().Str("key", k).Str("val",v.(string)).Msg("Variable dump")
+		log.Info().Str("key", k).Str("val", v.(string)).Msg("Variable dump")
 	}
 	return nil
 }
 func (a *apiFeature) iDumpHeaders() error {
 	for k, v := range a.headers {
-	  log.Info().Str("key", k).Str("val",v).Msg("Header dump")
+		log.Info().Str("key", k).Str("val", v).Msg("Header dump")
 	}
 	return nil
 }
 func (a *apiFeature) iDumpResponseHeaders() error {
 	for k, v := range a.lastHeaders {
-	  log.Info().Str("key", k).Str("val",v).Msg("Response header dump")
+		log.Info().Str("key", k).Str("val", v).Msg("Response header dump")
 	}
 	return nil
 }
@@ -1003,22 +1003,22 @@ func (a *apiFeature) iDumpResponseAsJSON() error {
 }
 func (a *apiFeature) iShowMemoryKey(key string) error {
 	fmt.Printf("[Memory \"%s\": \"%v\"]\n", key, a.memory[key])
-	log.Info().Str("key", key).Str("val",a.memory[key].(string)).Msg("Memory value")
+	log.Info().Str("key", key).Str("val", a.memory[key].(string)).Msg("Memory value")
 	return nil
 }
 func (a *apiFeature) iShowVariableKey(key string) error {
 	fmt.Printf("[Variable \"%s\": \"%v\"]\n", key, a.variables[key])
-	log.Info().Str("key", key).Str("val",a.variables[key].(string)).Msg("Variable value")
+	log.Info().Str("key", key).Str("val", a.variables[key].(string)).Msg("Variable value")
 	return nil
 }
 func (a *apiFeature) iShowHeaderKey(key string) error {
 	fmt.Printf("[Header \"%s\": \"%v\"]\n", key, a.headers[key])
-	log.Info().Str("key", key).Str("val",a.headers[key]).Msg("Header value")
+	log.Info().Str("key", key).Str("val", a.headers[key]).Msg("Header value")
 	return nil
 }
 func (a *apiFeature) iShowResponseHeaderKey(key string) error {
 	fmt.Printf("[Response header \"%s\": \"%v\"]\n", key, a.lastHeaders[key])
-	log.Info().Str("key", key).Str("val",a.lastHeaders[key]).Msg("Response header value")
+	log.Info().Str("key", key).Str("val", a.lastHeaders[key]).Msg("Response header value")
 	return nil
 }
 
@@ -1237,6 +1237,11 @@ func After(s, f string) string {
 }
 
 func main() {
+	if t := os.Getenv("WAIT"); t != "" {
+		if duration, err := time.ParseDuration(t); err == nil {
+			time.Sleep(duration)
+		}
+	}
 	flag.Parse()
 	funcMap = template.FuncMap{
 		"now":        time.Now,

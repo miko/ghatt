@@ -43,4 +43,12 @@ query ($code:String!="US") {
     {"name":"Poland", "capital":"Warsaw", "continent":{"name":"Europe"}}
     ]
       }}
-    """
+   """
+
+  Scenario: render env variable
+    Given I remember "me1" as "User"
+    Given I remember "me" as "User {{getenv `USER`}} has home {{getenv `HOME`}}"
+    Then I dump memory
+    Then I dump memory
+    Given I remember "me1" as "User"
+
