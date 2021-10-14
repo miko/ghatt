@@ -1262,6 +1262,19 @@ func main() {
 		ScenarioInitializer: InitializeScenario,
 		Options:             &opt,
 	}.Run()
-
+	switch status {
+	case 0:
+		fmt.Println("GHATT SUCCESS")
+		break
+	case 1:
+		fmt.Println("GHATT FAIL")
+		break
+	case 2:
+		fmt.Println("GHATT COMMAND LINE ERROR")
+		break
+	default:
+		fmt.Println("GHATT OS ERROR")
+		break
+	}
 	os.Exit(status)
 }
