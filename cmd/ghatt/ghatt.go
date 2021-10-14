@@ -1040,6 +1040,9 @@ func (a *apiFeature) iResetMemory() error {
 
 func seedDefaultMemory() {
 	defaultMemory = map[string]string{}
+	if s := os.Getenv("SEEDED"); s != "" {
+		seeded = s
+	}
 	//for k, v := range []string{"ENDPOINT", "OWNER", "HOME"} {
 	for k, v := range strings.Split(seeded, ",") {
 		value := os.Getenv(v)
